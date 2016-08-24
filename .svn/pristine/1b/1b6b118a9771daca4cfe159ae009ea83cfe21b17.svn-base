@@ -1,0 +1,20 @@
+import POS.GUI.MainFrame;
+import POS.GUI.MenuPane;
+
+/**
+ * A POS System for a
+ * small restaurant.
+ * 
+ * Maeghan Colvin & Jennifer Haveman
+ * CSC 289 0B01
+ * February 13, 2014
+ */
+
+public class Application 
+{
+    public static void main(String[] args)
+    {
+        // Begins the program.
+        MainFrame posProgram = new MainFrame();
+    }
+}

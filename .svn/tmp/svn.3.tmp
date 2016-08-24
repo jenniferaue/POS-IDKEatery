@@ -1,0 +1,10 @@
+----------------------------------------------------------------
+Thu Apr 24 23:46:46 EDT 2014:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.8.2.2 - (1181258): instance a816c00e-0145-96fe-1a79-00000088d580 
+on database directory E:\Capstone Project\I Dont Know Eatery\EateryDB  with class loader sun.misc.Launcher$AppClassLoader@1a7bf11 
+Loaded from file:/C:/Program%20Files%20(x86)/Java/jdk1.7.0_13/db/lib/derby.jar
+java.vendor=Oracle Corporation
+java.runtime.version=1.7.0_40-b43
+user.dir=E:\Capstone Project\I Dont Know Eatery
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''

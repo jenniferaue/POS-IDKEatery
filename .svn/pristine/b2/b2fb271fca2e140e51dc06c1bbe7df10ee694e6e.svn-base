@@ -1,0 +1,355 @@
+package POS.GUI;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Enumeration;
+import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.TitledBorder;
+
+/**
+ * A POS System for a
+ * small restaurant.
+ * 
+ * Maeghan Colvin and Jennifer Haveman
+ * CSC 289 0B01
+ * February 22, 2014
+ */
+public class EntreesPanel extends JPanel
+{
+    // Variables.
+    private final JButton hotDogButton, burgButton, twoPcButton, fourPcButton,
+            sixPcButton, chkSandwichButton, chkStripsButton;
+    private String foodItem = "";
+    private String foodPrice;
+    private final ButtonGroup modGroup = new ButtonGroup();
+
+    /**
+     * Creates the entree panel.
+     */
+    public EntreesPanel()
+    {
+        // Set layout and border.
+        super();
+        setLayout(new GridLayout(7,1));
+        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        setFont(new Font("Arial",Font.BOLD,20));
+        
+        // Create buttons.
+        hotDogButton = new JButton("Hot Dog");
+        burgButton = new JButton("Hamburger");
+        twoPcButton = new JButton("Chicken 2pc");
+        fourPcButton = new JButton("Chicken 4pc");
+        sixPcButton = new JButton("Chicken 6pc");
+        chkSandwichButton = new JButton("Chicken Sandwich");
+        chkStripsButton = new JButton("Chicken Strips");
+        
+        // adds action listeners that take a price argument
+        hotDogButton.addActionListener(new EntreeListener());
+        burgButton.addActionListener(new EntreeListener());
+        twoPcButton.addActionListener(new EntreeListener());
+        fourPcButton.addActionListener(new EntreeListener());
+        sixPcButton.addActionListener(new EntreeListener());
+        chkSandwichButton.addActionListener(new EntreeListener());
+        chkStripsButton.addActionListener(new EntreeListener());
+        
+        // Add buttons.
+        add(hotDogButton);
+        add(burgButton);
+        add(twoPcButton);
+        add(fourPcButton);
+        add(sixPcButton);
+        add(chkSandwichButton);
+        add(chkStripsButton);
+    }
+    
+    /**
+     * Creates a dialog that opens on Entree selection
+     */
+    public void createModDialog()
+    {
+        // create JDialog
+        final JDialog dialog = new JDialog(MenuPane.frame, false);
+        dialog.setUndecorated(true);
+
+        // Create & initialize buttons
+         JButton avoButton = new JButton("Avocado");
+         JButton bacButton = new JButton("Bacon");
+         JButton cSliceButton = new JButton("Cheese Slice");
+         JButton chiliButton = new JButton("Chili");
+         JButton slawButton = new JButton("Coleslaw");
+         JButton lettuceButton = new JButton("Lettuce");
+         JButton mayoButton = new JButton("Mayo");
+         JButton mixChzButton = new JButton("Mixed Cheese");
+         JButton oRingsButton = new JButton("Onions");
+         JButton pickleButton = new JButton("Pickle");
+         JButton sauerkrautButton = new JButton("Sauerkraut");
+         JButton shroomButton = new JButton("Mushrooms");
+         JButton tomButton = new JButton("Tomatoes");
+         
+         // add actionListeners
+         avoButton.addActionListener(new OrderModListener());
+         bacButton.addActionListener(new OrderModListener());
+         cSliceButton.addActionListener(new OrderModListener());         
+         chiliButton.addActionListener(new OrderModListener());
+         slawButton.addActionListener(new OrderModListener());
+         lettuceButton.addActionListener(new OrderModListener());
+         mayoButton.addActionListener(new OrderModListener());
+         mixChzButton.addActionListener(new OrderModListener());
+         oRingsButton.addActionListener(new OrderModListener());
+         pickleButton.addActionListener(new OrderModListener());
+         sauerkrautButton.addActionListener(new OrderModListener());
+         shroomButton.addActionListener(new OrderModListener());
+         tomButton.addActionListener(new OrderModListener());
+         
+         JToggleButton onSideButton = new JToggleButton("On Side");
+         JToggleButton addButton = new JToggleButton("Add");
+         JToggleButton sideOfButton = new JToggleButton("Side Of");
+         addButton.setSelected(true);
+         onSideButton.setPreferredSize(new Dimension(75, 50));
+         addButton.setPreferredSize(new Dimension(75, 50));
+         sideOfButton.setPreferredSize(new Dimension(75, 50));
+         
+         // ensures that only one of those buttons are ever selected
+         modGroup.add(onSideButton);
+         modGroup.add(addButton);
+         modGroup.add(sideOfButton);
+         
+         //add buttons & create inner panels
+         JPanel entreesOptionPanel = new JPanel(new FlowLayout());
+         entreesOptionPanel.add(onSideButton);
+         entreesOptionPanel.add(addButton);
+         entreesOptionPanel.add(sideOfButton);
+         
+         JPanel entreesModPanel = new JPanel();
+         entreesModPanel.setLayout(new GridLayout(4,4));
+         entreesModPanel.add(avoButton);                 
+         entreesModPanel.add(bacButton);
+         entreesModPanel.add(cSliceButton);
+         entreesModPanel.add(chiliButton);
+         entreesModPanel.add(slawButton);
+         entreesModPanel.add(lettuceButton);
+         entreesModPanel.add(mayoButton);
+         entreesModPanel.add(mixChzButton);
+         entreesModPanel.add(oRingsButton);
+         entreesModPanel.add(pickleButton);
+         entreesModPanel.add(sauerkrautButton);
+         entreesModPanel.add(shroomButton);
+         entreesModPanel.add(tomButton);
+         
+         // create done button/exit button
+         JButton doneButton = new JButton("Done");
+         doneButton.setPreferredSize(new Dimension(75, 50));
+         
+         // set border with title
+         entreesModPanel.setBorder(BorderFactory.createTitledBorder("Entrees"));
+         
+         // Basic actionListener that closes and disposes of the dialog.
+         doneButton.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            dialog.setVisible(false);
+                            dialog.dispose();
+                        }
+                    });
+         
+         //Placing pane within JDialog
+         JPanel contentPane = new JPanel(new BorderLayout());
+         TitledBorder title;
+         Border lineBorder = BorderFactory.createLineBorder(Color.black, 1);
+         title = BorderFactory.createTitledBorder(lineBorder, "Modification Screen");
+         contentPane.setBorder(title);
+         contentPane.add(entreesOptionPanel, BorderLayout.NORTH);
+         contentPane.add(entreesModPanel, BorderLayout.CENTER);
+         contentPane.add(doneButton, BorderLayout.SOUTH);
+         contentPane.setOpaque(true);
+         dialog.setContentPane(contentPane);
+
+         //Show it.
+         dialog.setSize(new Dimension(700, 700));
+         dialog.setLocationRelativeTo(MenuPane.frame);
+         dialog.setVisible(true);
+    }
+    
+    /**
+     * Creates a chicken modification dialog that is modal, thus disabling the menu
+     * pane and not allowing for any other selections besides the ones on this panel
+     * until it's exited.
+     */
+    public void addChickenMod()
+    {
+        final JDialog chkDialog = new JDialog(MenuPane.frame, true);
+        chkDialog.getMinimumSize();
+        chkDialog.setUndecorated(true);
+        JButton friedButton = new JButton("Fried");
+        friedButton.setPreferredSize(new Dimension(75, 50));
+        JButton grilledButton = new JButton("Grilled"); 
+        grilledButton.setPreferredSize(new Dimension(75, 50));
+        
+        // sets the order item to be fried or grilled and sends it the to the list
+        grilledButton.addActionListener(new ActionListener() 
+        {
+            @Override
+            public void actionPerformed(ActionEvent e) 
+            {
+                if(e.getSource() instanceof JButton)
+                {             
+                    JButton button = (JButton) e.getSource();
+                
+                    String str = button.getText() + " ";
+                    foodItem = str + foodItem;
+                    MenuPane.getOrders(foodItem);
+                    
+                    chkDialog.setVisible(false);
+                    chkDialog.dispose();
+                }
+            }
+        });
+        friedButton.addActionListener(new ActionListener() 
+        {
+            @Override
+            public void actionPerformed(ActionEvent e) 
+            {
+                if(e.getSource() instanceof JButton)
+                {             
+                    JButton button = (JButton) e.getSource();
+                
+                    String str = button.getText() + " ";
+                    foodItem = str + foodItem;
+                    MenuPane.getOrders(foodItem);                    
+                    chkDialog.setVisible(false);
+                    chkDialog.dispose();
+                }
+            }
+        });
+        
+        // Adds all items to the panel and sets a titled border and size.
+        JPanel chickenOptionPanel = new JPanel(new FlowLayout());
+        chickenOptionPanel.add(friedButton);
+        chickenOptionPanel.add(grilledButton);
+        chickenOptionPanel.setOpaque(true);
+        TitledBorder title;
+        Border lineBorder = BorderFactory.createLineBorder(Color.black, 1);
+        title = BorderFactory.createTitledBorder(lineBorder, "Chicken Modification Screen");
+        chickenOptionPanel.setBorder(title);
+        chkDialog.setContentPane(chickenOptionPanel);
+        chkDialog.setSize(200, 80);
+        chkDialog.setLocationRelativeTo(MenuPane.frame);
+        chkDialog.setVisible(true);
+    }
+
+    /**
+     * Listens to the entree selection so it can set the price and tell the program
+     * which dialog to open for which modifications.
+     */
+    class EntreeListener implements ActionListener
+    {
+        @Override
+        public void actionPerformed(ActionEvent e) 
+        {
+            MenuPane.sendOrderButton.setEnabled(true);
+            
+            if(e.getSource() == hotDogButton | e.getSource() == burgButton)
+            {
+                createModDialog();
+                foodItem = "";
+                foodPrice ="4.99";
+                JButton button = (JButton) e.getSource();
+                foodItem += button.getText();
+                MenuPane.getOrders(foodItem);
+                MenuPane.getPrice(foodPrice);
+            }
+            else if(e.getSource() == twoPcButton | e.getSource() == fourPcButton |
+                    e.getSource() == sixPcButton)
+            {
+                JButton button = (JButton) e.getSource();
+                foodItem = button.getText();
+
+                addChickenMod();
+                if (e.getSource() == twoPcButton)
+                {
+                    foodPrice = "2.99";
+                    MenuPane.getPrice(foodPrice);
+                }
+                else if(e.getSource() == fourPcButton)
+                {
+                    foodPrice = "4.99";
+                    MenuPane.getPrice(foodPrice);
+                }
+                else
+                {
+                    foodPrice = "5.99";
+                    MenuPane.getPrice(foodPrice);
+                }
+            }
+            else if(e.getSource() == chkSandwichButton)
+            {
+                
+                foodItem = "";
+                foodPrice ="4.99";
+                JButton button = (JButton) e.getSource();
+                foodItem = button.getText();
+                MenuPane.getPrice(foodPrice);
+                createModDialog();
+                addChickenMod();
+            }
+            else
+            {
+                foodPrice = "3.99";
+                JButton button = (JButton) e.getSource();
+                foodItem = button.getText();
+                MenuPane.getPrice(foodPrice);
+                MenuPane.getOrders(foodItem);
+            }
+        }
+    }
+    
+    /**
+     * ActionListener attached the the modification dialog. This gets the 
+     * modification toggle button selection and the regular button selection
+     * and adds the string to the appropriate lists with a $0.00 price
+     */
+    class OrderModListener implements ActionListener
+    {
+        @Override
+        public void actionPerformed(ActionEvent e) 
+        {
+            String str;
+            foodItem = "     " + getSelectedButtonText(modGroup) + " ";
+            foodPrice = "0.00";
+            JButton button = (JButton) e.getSource();
+            str = button.getText(); 
+            foodItem += str;
+            MenuPane.getOrders(foodItem);
+            MenuPane.getPrice(foodPrice);
+        }
+    }
+    
+    /**
+     * 
+     * @param buttonGroup   the group of toggle buttons located on the top of the 
+     *                      modification dialog.
+     * @return              <code> String </code> returns the name of the selected
+     *                      toggle button within the buttonGroup.
+     */
+    public String getSelectedButtonText(ButtonGroup buttonGroup) 
+    {
+        for (Enumeration<AbstractButton> buttons = buttonGroup.getElements(); 
+                buttons.hasMoreElements();) {
+            AbstractButton button = buttons.nextElement();
+
+            if (button.isSelected()) 
+            {
+                return button.getText();
+            }
+        }
+
+        return null;
+    }
+}

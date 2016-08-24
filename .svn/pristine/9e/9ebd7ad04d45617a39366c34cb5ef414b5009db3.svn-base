@@ -1,0 +1,165 @@
+package POS.data;
+
+public class InventoryUpdate 
+{
+    private String foodItem = "";
+    private Double numCk;
+    private String sqlStatement, sqlStatement2, sqlStatement3, sqlStatement4, 
+            sqlStatement5, sqlStatement6;
+    private Double currentOnHand, adjustedOnHand, currentOnHand2, 
+            adjustedOnHand2;
+    private final Double modConstant = 0.25;
+    
+    /**
+     * 
+     * @param item 
+     */
+    public void InventoryUpdate(String item)
+    {
+        foodItem = item;
+        if("Hot Dog".contains(foodItem) || "Hamburger".contains(foodItem))
+        {
+            System.out.println(foodItem);
+            sqlStatement = "SELECT ProductQuantityOnHand " +
+                            "FROM Inventory " +
+                            "WHERE ProductName = '" + foodItem + " Bun' " +
+                            "AND ProductQuantityOnHand IS NOT NULL";
+            
+            sqlStatement2 = "SELECT ProductQuantityOnHand " +
+                            "FROM Inventory " +
+                            "WHERE ProductName = '" + foodItem + "' " +
+                            "AND ProductQuantityOnHand IS NOT NULL";
+            
+            String bunItem = EateryDBConnection.getDataString(sqlStatement);
+            String foodItem = EateryDBConnection.getDataString(sqlStatement2);
+            
+            System.out.println(bunItem + ":" + foodItem);
+            
+            currentOnHand = Double.parseDouble(bunItem);
+            currentOnHand2 = Double.parseDouble(foodItem);
+            
+            adjustedOnHand = currentOnHand - 1;
+            adjustedOnHand2 = currentOnHand2 - 1;
+            
+            sqlStatement3 = "UPDATE Inventory " +
+                            "SET ProductQuantityOnHand = " + adjustedOnHand +
+                            "WHERE ProductName = '" + item + " Bun' " +
+                            "AND ProductQuantityOnHand IS NOT NULL " + 
+                            "AND ProductQuantityOnHand > " + 0.0;
+            System.out.println(adjustedOnHand);
+            EateryDBConnection.updateDatabase(sqlStatement3);
+            
+            sqlStatement4 = "UPDATE Inventory " +
+                            "SET ProductQuantityOnHand = " + adjustedOnHand2 +
+                            "WHERE ProductName = '" + item + "' " +
+                            "AND ProductQuantityOnHand IS NOT NULL " + 
+                            "AND ProductQuantityOnHand > " + 0;
+            
+            System.out.println(sqlStatement4);
+            
+            
+            EateryDBConnection.updateDatabase(sqlStatement4);
+        }
+        
+        else if("Chicken 2pc".contains(foodItem) | "Chicken 4pc".contains(foodItem) | 
+                "Chicken 6pc".equals(foodItem))
+        {
+            foodItem = item.substring(1, 7);
+            System.out.println(item);
+            numCk = Double.parseDouble(foodItem.substring(8, 9));
+            System.out.println(numCk);
+            
+            sqlStatement = "SELECT ProductQuantityOnHand " +
+                            "FROM Inventory " +
+                            "WHERE ProductName = '" + foodItem + "' " +
+                            "AND ProductQuantityOnHand IS NOT NULL";
+            System.out.println(sqlStatement);
+            
+            String chkPieces = EateryDBConnection.getDataString(sqlStatement);
+            
+            
+            currentOnHand = Double.parseDouble(chkPieces);
+            adjustedOnHand = currentOnHand - numCk;
+            
+            sqlStatement2 = "UPDATE Inventory" +
+                            "SET ProductQuantityOnHand = " + adjustedOnHand +
+                            "WHERE ProductName  = '" + chkPieces + "' " +
+                            "AND ProductQuantityOnHand IS NOT NULL " + 
+                            "AND ProductQuantityOnHand < " + 0;
+            
+            EateryDBConnection.updateDatabase(sqlStatement2);
+        }
+        
+        else if("Chicken Strips".endsWith(foodItem))
+        {
+            sqlStatement = "SELECT ProductQuantityOnHand " +
+                            "FROM Inventory " +
+                            "WHERE ProductName = '" + foodItem + "' " +
+                            "AND ProductQuantityOnHand IS NOT NULL";
+            
+            String chkStrips = EateryDBConnection.getDataString(sqlStatement); 
+            
+            currentOnHand = Double.parseDouble(chkStrips);
+            adjustedOnHand = currentOnHand - 4;
+            
+            sqlStatement2 = "UPDATE Inventory" +
+                            "SET ProductQuantityOnHand = " + adjustedOnHand +
+                            "WHERE ProductName  = '" + chkStrips + "' " +
+                            "AND ProductQuantityOnHand IS NOT NULL " + 
+                            "AND ProductQuantityOnHand < " + 0;
+            
+            EateryDBConnection.updateDatabase(sqlStatement2);
+        }
+        
+        else if("Fries".equals(foodItem) | "Hushpuppies".equals(foodItem) | 
+                "Coleslaw".equals(foodItem) | "Mac-n-Cheese".equals(foodItem) |
+                "Beans".equals(foodItem) | "Baked Potato".equals(foodItem))
+        {
+            sqlStatement = "SELECT ProductQuantityOnHand " +
+                            "FROM Inventory " +
+                            "WHERE ProductName = '" + foodItem + "' " +
+                            "AND ProductQuantityOnHand IS NOT NULL";
+            String sideItem = EateryDBConnection.getDataString(sqlStatement);             
+            
+            currentOnHand = Double.parseDouble(sideItem);
+            adjustedOnHand = currentOnHand - 1;
+            
+            sqlStatement2 = "UPDATE Inventory" +
+                            "SET ProductQuantityOnHand = " + adjustedOnHand +
+                            "WHERE ProductName  = '" + foodItem + "' " +
+                            "AND ProductQuantityOnHand IS NOT NULL " + 
+                            "AND ProductQuantityOnHand < " + 0;
+            
+            EateryDBConnection.updateDatabase(sqlStatement2);
+
+        }
+        else if("Avocado".contains(foodItem) | "Bacon".contains(foodItem) | 
+                "Cheese Slice".contains(foodItem) | "Lettuce".contains(foodItem) |
+                "Mayo".contains(foodItem) | "Mixed Cheese".contains(foodItem) |
+                "Onions".contains(foodItem) | "Pickle".contains(foodItem) |
+                "Sauerkraut".contains(foodItem) | "Mushrooms".contains(foodItem) |
+                "Tomatoes".contains(foodItem))
+        {
+            sqlStatement5 = "SELECT ProductQuantityOnHand " +
+                        "FROM Inventory " +
+                        "WHERE ProductName = '" + foodItem + "' " +
+                        "AND ProductQuantityOnHand IS NOT NULL";
+            System.out.println(sqlStatement5);
+            
+            String modItem = EateryDBConnection.getDataString(sqlStatement5);
+
+            currentOnHand = Double.parseDouble(modItem);
+            adjustedOnHand = currentOnHand - modConstant;
+            
+
+            sqlStatement6 = "UPDATE Inventory" +
+                            "SET ProductQuantityOnHand = " + adjustedOnHand +
+                            "WHERE ProductID  = '" + foodItem + "' " +
+                            "AND ProductQuantityOnHand IS NOT NULL " + 
+                            "AND ProductQuantityOnHand < " + 0;
+            System.out.println(sqlStatement6);
+            
+            EateryDBConnection.updateDatabase(sqlStatement6);
+        }
+    }
+}

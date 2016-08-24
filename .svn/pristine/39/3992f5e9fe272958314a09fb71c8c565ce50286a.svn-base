@@ -1,0 +1,249 @@
+package POS.data;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.logging.*;
+import javax.swing.JOptionPane;
+import org.apache.derby.drda.NetworkServerControl;
+
+/**
+ * A POS System for a small restaurant.
+ *
+ * Maeghan Colvin and Jennifer Haveman 
+ * CSC 289 0B01 
+ * February 24, 2014
+ */
+public class EateryDBConnection
+{
+
+    private static final String driver = "org.apache.derby.jdbc.ClientDriver";    
+    private static final String url = "jdbc:derby://localhost:1527/D:/EateryDB";
+    private static NetworkServerControl server;
+    
+    /**
+     *
+     * @param sqlStatement
+     * @return
+     */   
+    public static ResultSet getTableResults(String sqlStatement)
+    {
+        try 
+          {
+           
+            Class.forName(driver); 
+          } 
+        catch(java.lang.ClassNotFoundException e) 
+          {
+          }
+        try
+        {
+            // Connect to database
+            ResultSet results;
+            try (Connection conn = DriverManager.getConnection(url))
+            {
+                Statement stmt = conn.createStatement(
+                        ResultSet.TYPE_SCROLL_INSENSITIVE,
+                        ResultSet.CONCUR_READ_ONLY);
+                results = stmt.executeQuery(sqlStatement);
+            }
+
+            return results;
+        }
+        catch (SQLException ex)
+        {
+            Logger.getLogger(EateryDBConnection.class.getName()).
+                    log(Level.SEVERE,
+                    null,
+                    ex);
+            return null;
+        }
+    }
+
+    /**
+     * The getSearch method returns a 
+     * boolean search on the database.
+     * @param sqlStatement
+     * @return
+     */
+    public static boolean getSearch(String sqlStatement)
+    {
+        boolean found = false;
+
+        try 
+          {
+            Class.forName(driver); 
+          } 
+        catch(java.lang.ClassNotFoundException e) 
+          {
+          }
+        
+        try
+        {
+            // Connect to database
+            try (Connection conn = DriverManager.getConnection(url))
+            {
+                Statement stmt = conn.createStatement(
+                        ResultSet.TYPE_SCROLL_INSENSITIVE,
+                        ResultSet.CONCUR_READ_ONLY);
+
+                // Get ResultSet
+                ResultSet results = stmt.executeQuery(sqlStatement);
+                found = results.next();
+                conn.close();
+            }
+
+            return found;
+        }
+        catch (SQLException ex)
+        {
+            Logger.getLogger(EateryDBConnection.class.getName()).
+                    log(Level.SEVERE,
+                    null,
+                    ex);
+            return found;
+        }
+    }
+
+     /**
+     * The updateDatabase method is used
+     * to send update statements to the database.
+     * @param sqlStatement 
+     */
+    public static void updateDatabase(String sqlStatement)
+    {
+        try 
+          {
+            Class.forName(driver); 
+          } 
+        catch(java.lang.ClassNotFoundException e) 
+          {
+          }
+        
+        // Connect to database
+        try (Connection conn = DriverManager.getConnection(url))
+        {
+            Statement stmt = conn.createStatement();
+            stmt.execute(sqlStatement);
+            conn.close();
+        }
+        catch (SQLException ex)
+        {
+            Logger.getLogger(EateryDBConnection.class.getName()).
+                    log(Level.SEVERE,
+                    null,
+                    ex);
+            JOptionPane.showMessageDialog(null,
+                    "ERROR IN SQL: " + ex.getMessage());
+        }
+    }
+    
+    /**
+     * The getDate method returns an 
+     * array of information from the database.
+     * @param sqlStatement
+     * @return
+     */
+    public static String[] getData(String sqlStatement)
+    {
+        String[] resultsArray;
+        
+        try 
+          {
+            Class.forName(driver); 
+          } 
+        catch(java.lang.ClassNotFoundException e) 
+          {
+          }
+
+        try
+        {
+            // Connect to database
+            try (Connection conn = DriverManager.getConnection(url))
+            {
+                Statement stmt = conn.createStatement(
+                        ResultSet.TYPE_SCROLL_INSENSITIVE,
+                        ResultSet.CONCUR_READ_ONLY);
+
+                // Get ResultSet
+                ResultSet results = stmt.executeQuery(sqlStatement);
+
+                // Search ResultSet to find if data was found
+                ArrayList<String> rowValues = new ArrayList<>();
+                while (results.next()) 
+                {
+                    int i = 1;
+                    
+                    ResultSetMetaData metadata = results.getMetaData();
+                    int numberOfColumns = metadata.getColumnCount();
+                    while(i <= numberOfColumns) 
+                    {
+                        rowValues.add(results.getString(i++).trim());
+                    }
+                }   
+
+                conn.close();
+                
+                resultsArray = (String[]) rowValues.toArray(new String[rowValues.size()]);
+            }
+            
+            return resultsArray;
+        }
+        catch (SQLException ex)
+        {
+            Logger.getLogger(EateryDBConnection.class.getName()).
+                    log(Level.SEVERE,
+                    null,
+                    ex);
+            return null;
+        }
+    }
+    
+    /**
+     * The getDataString method returns a 
+     * String result from the database.
+     * @param sqlStatement
+     * @return
+     */
+    public static String getDataString(String sqlStatement)
+    {
+        String searchString = "";
+
+        try 
+          {
+            Class.forName(driver); 
+          } 
+        catch(java.lang.ClassNotFoundException e) 
+          {
+          }
+        
+        try
+        {
+            // Connect to database
+            try (Connection conn = DriverManager.getConnection(url))
+            {
+                Statement stmt = conn.createStatement();
+
+                // Get ResultSet
+                ResultSet results = stmt.executeQuery(sqlStatement);
+                
+                while (results.next()) 
+                {
+                    searchString = results.getString(1).trim();
+                }
+                
+                conn.close();
+                
+                // Return
+                return searchString;
+            }
+        }
+        catch (SQLException ex)
+        {
+            Logger.getLogger(EateryDBConnection.class.getName()).
+                    log(Level.SEVERE,
+                    null,
+                    ex);
+            return null;
+        }
+    }
+}

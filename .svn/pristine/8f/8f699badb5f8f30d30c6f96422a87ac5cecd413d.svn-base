@@ -1,0 +1,33 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package POS.data;
+
+/**
+ * A POS System for a
+ * small restaurant.
+ * 
+ * Maeghan Colvin and Jennifer Haveman
+ * CSC 289 0B01
+ * February 13, 2014
+ */
+public class SalesUpdate 
+{
+    private Double noTaxTotal;
+    private final Double salesTaxConstant = 0.08;
+    private Double salesTax;
+    private String sqlStatement;
+    
+    public void SalesUpdate(Double cost)
+    {
+        noTaxTotal = cost;
+        salesTax = noTaxTotal * salesTaxConstant;
+        
+        sqlStatement = "INSERT INTO Sales " +
+                        "(SalesPrice, Tax)" +
+                        "(
+    }
+}

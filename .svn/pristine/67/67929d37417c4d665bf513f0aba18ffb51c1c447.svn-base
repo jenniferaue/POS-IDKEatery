@@ -1,0 +1,710 @@
+package POS.GUI;
+
+import POS.data.EateryDBConnection;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import POS.data.InventoryUpdate;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.awt.print.PrinterException;
+import java.awt.print.PrinterJob;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import static javax.swing.BoxLayout.PAGE_AXIS;
+import javax.swing.border.Border;
+import javax.swing.border.TitledBorder;
+
+/**
+ * A POS System for a
+ * small restaurant.
+ *
+ * Maeghan Colvin and Jennifer Haveman
+ * CSC 289 0B01
+ * February 13, 2014
+ */
+
+public class MenuPane extends JPanel
+{
+
+    // Variables. Creates all of the Panels and the TabbedPane.
+    private JTabbedPane tabbedPane = new JTabbedPane();
+    private JPanel mainPanel;
+    private JPanel orderModPanel = new JPanel();
+    private JPanel orderListPanel = new JPanel();
+    private JPanel numberPanel;
+    private JPanel paymentPanel;
+    private JPanel totalsPanel;
+    private JPanel orderTotalPanel;
+    private JPanel calcPanel;
+    private JPanel changePanel;
+    static JFrame frame;
+    private JDialog dialog;
+    JButton deleteButton;
+    static JButton sendOrderButton = new JButton("Send Order");
+    static JButton payButton = new JButton("Take Payment");
+    private JScrollPane listScroller;
+    private JScrollPane priceScroller;
+    private JScrollPane scroll;
+    private JList priceList;
+    private JList list;
+    private final static DefaultListModel price = new DefaultListModel();
+    private final static DefaultListModel order = new DefaultListModel();
+    private JTextArea finalOrderTextField = new JTextArea();
+    private JTextField totalTextField = new JTextField();
+    private JTextField taxTextField = new JTextField();
+    private JTextField subTotalTextField = new JTextField();
+    private JTextField paymentTextField = new JTextField("$");
+    private JTextField changeTextField = new JTextField();
+    private JTextField changeText;
+    private JButton numbersButton[] = new JButton[9];
+    private JButton periodButton, zeroButton, clearButton, okayButton, emptyButton,
+            logoutButton;
+
+    private String paymentString = "";
+    private String subtotalString;
+    private String sqlStatement;
+    private double subtotal;
+    private double tax;
+    private double change;
+    private double total;
+    private final double TAX_CONSTANT = .08; //8% food tax
+    private final int xSize;
+    private final int ySize;
+    private JButton emptyButton2;
+    private JButton doneButton;
+
+    public MenuPane()
+    {
+        try
+        {
+            UIManager.setLookAndFeel(
+                UIManager.getSystemLookAndFeelClassName());
+        }
+        catch (ClassNotFoundException | IllegalAccessException | InstantiationException | UnsupportedLookAndFeelException e) { }
+
+        // Make sure we have nice window decorations.
+        JFrame.setDefaultLookAndFeelDecorated(true);
+
+        // Create and set up the window.
+        frame = new JFrame("I Don't Know Eatery");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setUndecorated(true);
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        frame.setLayout(new BoxLayout(frame.getContentPane(), PAGE_AXIS));
+
+        Toolkit tk = Toolkit.getDefaultToolkit();
+        xSize = ((int) tk.getScreenSize().getWidth());
+        ySize = ((int) tk.getScreenSize().getHeight());
+        int fillerWidth = (xSize - 1400)/2;
+        int fillerHeight = 0;
+        Dimension minSize = new Dimension(fillerWidth, fillerHeight);
+        Dimension prefSize = new Dimension(fillerWidth, fillerHeight);
+        Dimension maxSize = new Dimension(Short.MAX_VALUE, fillerHeight);
+        buildMainPanel();
+
+        // Add content to the window.
+        frame.add(new Box.Filler(minSize, prefSize, maxSize));
+        frame.add(mainPanel);
+        frame.add(new Box.Filler(minSize, prefSize, maxSize));
+        frame.validate();
+
+        // Display the window.
+        frame.setVisible(true);
+    }
+
+    private void buildMainPanel()
+    {
+        mainPanel = new JPanel();
+        mainPanel.setLayout(new BorderLayout());
+        createAndBuildTabbedPane();
+        createOrderModPanel();
+        createOrderListBox();
+
+        // Add content to the window.
+        mainPanel.add(tabbedPane, BorderLayout.WEST);
+        mainPanel.add(orderListPanel, BorderLayout.EAST);
+        mainPanel.add(orderModPanel, BorderLayout.SOUTH);
+        mainPanel.setMaximumSize(new Dimension(1200, ySize));
+        mainPanel.setMinimumSize(new Dimension(1200, ySize));
+        mainPanel.setPreferredSize(new Dimension(1200, ySize));
+    }
+
+    /**
+     * Creates and builds the tabbed pane for the main menu
+     */
+    private void createAndBuildTabbedPane()
+    {
+        /*
+         * Sets up the way the tabbed pane looks. Buttons on left alignment
+         * with wrapped tabs.
+         */
+        tabbedPane.setTabPlacement(JTabbedPane.LEFT);
+        tabbedPane.setTabLayoutPolicy(JTabbedPane.WRAP_TAB_LAYOUT);
+        tabbedPane.setFont(new Font("Arial",Font.PLAIN,16));
+
+        /*
+         * Creates the panel, tab, size, mnemonics, and tooltips for the various tabs
+         * within the program
+         */
+        JPanel bevPanel = new BevPanel();
+        // Adds the tab and bevPanel to the tabbed pane as well as setting size.
+        tabbedPane.addTab("<html><body leftmargin=15 topmargin=35 marginwidth=15 "
+                + "marginheight=25>Beverages</body></html>", bevPanel);
+        // Sets mnemonic.
+        tabbedPane.setMnemonicAt(0, KeyEvent.VK_B);
+        // Sets a basic tooltip.
+        tabbedPane.setToolTipTextAt(0, "Beverages");
+
+        JPanel entreesPanel = new EntreesPanel();
+        // Adds the tab and entreesPanel to the tabbed pane as well as setting size.
+        tabbedPane.addTab("<html><body leftmargin=15 topmargin=35 marginwidth=15 "
+                + "marginheight=25>Entrees</body></html>", entreesPanel);
+        // Sets mnemonic.
+        tabbedPane.setMnemonicAt(1, KeyEvent.VK_E);
+        // Sets a basic tooltip.
+        tabbedPane.setToolTipTextAt(1, "Entrees");
+
+        JPanel dessertsPanel = new DessertsPanel();
+        // Adds the tab and dessertsPanel to the tabbed pane as well as setting size.
+        tabbedPane.addTab("<html><body leftmargin=15 topmargin=35 marginwidth=15 "
+                + "marginheight=25>Desserts</body></html>", dessertsPanel);
+        // Sets mnemonic.
+        tabbedPane.setMnemonicAt(2, KeyEvent.VK_D);
+        // Sets a basic tooltip.
+        tabbedPane.setToolTipTextAt(2, "Desserts");
+
+        JPanel sidesPanel = new SidesPanel();
+        // Adds the tab and sidesPanel to the tabbed pane as well as setting size.
+        tabbedPane.addTab("<html><body leftmargin=15 topmargin=35 marginwidth=15 "
+                + "marginheight=25>Sides</body></html>", sidesPanel);
+        // Set mnemonic.
+        tabbedPane.setMnemonicAt(3, KeyEvent.VK_S);
+        // Sets a basic tooltip.
+        tabbedPane.setToolTipTextAt(3,"Sides");
+    }
+
+    /**
+     * Creates the small panel at the bottom of the menu screen.
+     * This allows you to delete items from the check, send the order, or
+     * take payment.
+     */
+    private void createOrderModPanel()
+    {
+        // creates and adds buttons to a check mod panel
+        logoutButton = new JButton("Logout");
+        logoutButton.setPreferredSize(new Dimension(140, 50));
+        logoutButton.addActionListener(new OrderScreenActionListener());
+        deleteButton = new JButton("Delete");
+        deleteButton.setPreferredSize(new Dimension(140, 50));
+        deleteButton.addActionListener(new OrderScreenActionListener());
+        sendOrderButton.setPreferredSize(new Dimension(140, 50));
+        sendOrderButton.addActionListener(new OrderScreenActionListener());
+        payButton.setPreferredSize(new Dimension(140, 50));
+        payButton.addActionListener(new OrderScreenActionListener());
+        payButton.setEnabled(false);
+
+        orderModPanel.add(logoutButton);
+        orderModPanel.add(deleteButton);
+        orderModPanel.add(sendOrderButton);
+        orderModPanel.add(payButton);
+    }
+
+    /**
+     * Creates the Order Screen and lists that contain the complete
+     * order and the prices of the items and displays them.
+     */
+    private void createOrderListBox()
+    {
+        // creates the order printout screen
+        orderListPanel.setLayout(new BorderLayout());
+
+        // initiates an index and 2 lists
+        int index = 0;
+        list = new JList();
+        priceList = new JList();
+
+        // only allows single selection
+        list.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+        priceList.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+
+        // makes sure lists come out vertical
+        list.setLayoutOrientation(JList.VERTICAL);
+        priceList.setLayoutOrientation(JList.VERTICAL);
+        list.setVisibleRowCount(-1);
+        priceList.setVisibleRowCount(-1);
+
+        // connects default list models to list. The default list model allows
+        // the list to not have a set size.
+        list.setModel(order);
+        priceList.setModel(price);
+
+        // connects lists to a scroll pane
+        listScroller = new JScrollPane(list);
+        priceScroller = new JScrollPane(priceList);
+        listScroller.setOpaque(false);
+        priceScroller.setOpaque(false);
+        list.setFont(new Font("Arial",Font.PLAIN,18));
+        priceList.setFont(new Font("Arial",Font.PLAIN,18));
+
+        // makes the first item in the list the default selected
+        list.setSelectedIndex(index);
+
+        // sets size
+        listScroller.setPreferredSize(new Dimension(440, 700));
+        priceScroller.setPreferredSize(new Dimension(100, 700));
+
+        listScroller.setBackground(Color.pink);
+        priceScroller.setBackground(Color.pink);
+        list.setBackground(Color.pink);
+        priceList.setBackground(Color.pink);
+
+        // adds borders and scroll panes to the panel
+        orderListPanel.setBorder(BorderFactory.createTitledBorder("Order Details"));
+        orderListPanel.add(listScroller, BorderLayout.WEST);
+        orderListPanel.add(priceScroller, BorderLayout.EAST);
+    }
+
+    // adds items to DefaultListModel order
+    static void getOrders(String item)
+    {
+        order.addElement(item);
+    }
+
+    // adds items to DefaultListModel price
+    static void getPrice(String num)
+    {
+        price.addElement(num);
+    }
+
+    /**
+     * Listens to the orderScreenModPanel buttons to see whether the items should
+     * be deleted, sent to the database, or paid for.
+     */
+    class OrderScreenActionListener implements ActionListener
+    {
+        @Override
+        public void actionPerformed(ActionEvent e)
+        {
+            // deletes the selected item, if nothing is selected
+            if (e.getSource() == deleteButton)
+            {
+                if(!order.isEmpty())
+                {
+                    int index;
+                    if(list.isSelectionEmpty() == true)
+                    {
+                        index = 0;
+                    }
+                    else
+                    {
+                        index = list.getSelectedIndex();
+                    }
+                    order.removeElementAt(index);
+                    price.removeElementAt(index);
+                }
+            }
+            else if(e.getSource() == sendOrderButton)
+            {
+                for (int index=0; index < order.getSize(); index++)
+                {
+                    String str;
+                    InventoryUpdate iu = new InventoryUpdate();
+                    str = order.getElementAt(index).toString();
+                    iu.InventoryUpdate(str);
+                }
+
+                listScroller.setBackground(Color.white);
+                priceScroller.setBackground(Color.white);
+                list.setBackground(Color.white);
+                priceList.setBackground(Color.white);
+                printComponent(orderListPanel);
+                payButton.setEnabled(true);
+                sendOrderButton.setEnabled(false);
+            }
+            else if(e.getSource() == logoutButton)
+            {
+                MainFrame posProgram = new MainFrame();
+                frame.dispose();
+            }
+            else
+            {
+                OpenPayDialog();
+            }
+        }
+    }
+
+    /**
+     * Creates the payment dialog. This allows the person to calculate the subtotal,
+ money given, and change for the current order.
+     */
+    private void OpenPayDialog()
+    {
+        dialog = new JDialog(MenuPane.frame, true);
+        dialog.setTitle("Payment Processing");
+        dialog.setUndecorated(true);
+        calcPanel = new JPanel();
+        changePanel = new JPanel(new BorderLayout());
+        orderTotalPanel = new JPanel(new BorderLayout());
+        calcPanel.setLayout(new BorderLayout());
+        changePanel.setLayout(new BorderLayout());
+        numberPanel = new JPanel(new GridLayout(5, 2));
+        numberPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        changeText = new JTextField("    Change Due:");
+        changeText.setEditable(false);
+        paymentTextField.setHorizontalAlignment(JTextField.RIGHT);
+        finalOrderTextField.setMinimumSize(new Dimension(200, 350));
+        finalOrderTextField.setMaximumSize(new Dimension(200, 350));
+        finalOrderTextField.setPreferredSize(new Dimension(200, 350));
+        finalOrderTextField.setBorder(BorderFactory.createTitledBorder("Order"));
+        finalOrderTextField.setEditable(false);
+        scroll = new JScrollPane(finalOrderTextField);
+        scroll.setOpaque(false);
+        scroll.setBackground(Color.white);
+
+
+
+        int index;
+        String str = "";
+
+        // Add buttons to numberPanel
+        for(index = 0; index < numbersButton.length; index++)
+        {
+            numbersButton[index] = new JButton();
+            numbersButton[index].setText(Integer.toString(index + 1));
+            numbersButton[index].addActionListener(new numberActionListener());
+            numberPanel.add(numbersButton[index]);
+        }
+
+        // sets the list text in the payment field
+        for (index = 0; index < order.size(); index++)
+        {
+            str += "\n" + order.getElementAt(index);
+            finalOrderTextField.setText(str);
+        }
+
+        // doesn't allow for any unauthorized characters to be typed into the
+        // payment field
+        paymentTextField.addKeyListener(new KeyAdapter()
+        {
+            @Override
+            public void keyTyped(KeyEvent e)
+            {
+                char character = e.getKeyChar();
+                if (((character < '0') || (character > '9' || (character == '.')))
+                        && (character != '\b'))
+                {
+                    e.consume();
+                }
+            }
+        });
+
+        if(!paymentString.isEmpty())
+        {
+            paymentTextField.setText(paymentString);
+        }
+
+        subtotal = 0;
+
+        // gets the subtotal of the order
+        for(index = 0; index < price.size(); index++)
+        {
+            str = String.valueOf(price.getElementAt(index));
+            subtotal += Double.parseDouble(str);
+            subtotalString = String.format("%1$.02f", subtotal);
+        }
+
+        subTotalTextField.setHorizontalAlignment(JTextField.RIGHT);
+        taxTextField.setHorizontalAlignment(JTextField.RIGHT);
+        totalTextField.setHorizontalAlignment(JTextField.RIGHT);
+
+        tax = subtotal * TAX_CONSTANT;
+        String taxString = String.format("%1$.02f", tax);
+        total = tax + subtotal;
+        String totalString = String.format("%1$.02f", total);
+
+        subTotalTextField.setText("Subtotal: $" + subtotal);
+        taxTextField.setText("Tax: $" + taxString);
+        totalTextField.setText("Total: $" + totalString);
+        totalsPanel = new JPanel(new BorderLayout());
+        totalsPanel.add(subTotalTextField, BorderLayout.NORTH);
+        totalsPanel.add(taxTextField, BorderLayout.CENTER);
+        totalsPanel.add(totalTextField, BorderLayout.SOUTH);
+
+        // Add the ok, zero, and clear buttons to the numbersPanel
+        periodButton = new JButton(".");
+        periodButton.addActionListener(new numberActionListener());
+        zeroButton = new JButton("0");
+        zeroButton.addActionListener(new numberActionListener());
+        emptyButton = new JButton();
+        okayButton = new JButton("OK");
+        okayButton.setMnemonic(KeyEvent.VK_K);
+        okayButton.setMinimumSize(new Dimension(50,50));
+        okayButton.addActionListener(new okayButtonActionListener());
+        clearButton = new JButton("Clear");
+        clearButton.setMnemonic(KeyEvent.VK_C);
+        clearButton.addActionListener(new clearActionListener());
+        doneButton = new JButton("Done");
+        doneButton.setMnemonic(KeyEvent.VK_D);
+        doneButton.addActionListener(new doneButtonActionListener());
+
+
+        numberPanel.add(periodButton);
+        numberPanel.add(zeroButton);
+        numberPanel.add(emptyButton);
+        numberPanel.add(okayButton);
+        numberPanel.add(clearButton);
+        numberPanel.add(doneButton);
+
+
+        calcPanel.add(numberPanel, BorderLayout.CENTER);
+        calcPanel.add(paymentTextField, BorderLayout.NORTH);
+        changePanel.add(changeTextField, BorderLayout.CENTER);
+        changePanel.add(changeText, BorderLayout.WEST);
+        orderTotalPanel.add(scroll, BorderLayout.CENTER);
+        orderTotalPanel.add(totalsPanel, BorderLayout.SOUTH);
+
+        // Add components to mainPanel
+        paymentPanel = new JPanel();
+        paymentPanel.setLayout(new BorderLayout());
+        paymentPanel.add(calcPanel, BorderLayout.CENTER);
+        paymentPanel.add(changePanel, BorderLayout.SOUTH);
+        paymentPanel.add(orderTotalPanel, BorderLayout.WEST);
+
+        TitledBorder title;
+        Border lineBorder = BorderFactory.createLineBorder(Color.black, 1);
+        title = BorderFactory.createTitledBorder(lineBorder, "Payment Processing Screen");
+        paymentPanel.setBorder(title);
+
+         //Show it.
+        dialog.add(paymentPanel, BorderLayout.CENTER);
+        dialog.setSize(new Dimension(600, 500));
+        dialog.setLocationRelativeTo(MenuPane.frame);
+        dialog.setVisible(true);
+    }
+
+    /**
+     * This actionListener takes the number selected and appends it to the
+     * payment string, allowing a number to be typed into the text field one
+     * value at a time.
+     */
+     private class numberActionListener implements ActionListener
+     {
+        @Override
+        public void actionPerformed(ActionEvent e)
+        {
+            String text = paymentTextField.getText();
+
+            if(e.getSource() == numbersButton[0])
+            {
+                paymentString += 1;
+                text += 1;
+                paymentTextField.setText(text);
+            }
+            if(e.getSource() == numbersButton[1])
+            {
+                paymentString += 2;
+                text += 2;
+                paymentTextField.setText(text);
+            }
+            if(e.getSource() == numbersButton[2])
+            {
+                paymentString += 3;
+                text += 3;
+                paymentTextField.setText(text);
+            }
+            if(e.getSource() == numbersButton[3])
+            {
+                paymentString += 4;
+                text += 4;
+                paymentTextField.setText(text);
+            }
+            if(e.getSource() == numbersButton[4])
+            {
+                paymentString += 5;
+                text += 5;
+                paymentTextField.setText(text);
+            }
+            if(e.getSource() == numbersButton[5])
+            {
+                paymentString += 6;
+                text += 6;
+                paymentTextField.setText(text);
+            }
+            if(e.getSource() == numbersButton[6])
+            {
+                paymentString += 7;
+                text += 7;
+                paymentTextField.setText(text);
+            }
+            if(e.getSource() == numbersButton[7])
+            {
+                paymentString += 8;
+                text += 8;
+                paymentTextField.setText(text);
+            }
+            if(e.getSource() == numbersButton[8])
+            {
+                paymentString += 9;
+                text += 9;
+                paymentTextField.setText(text);
+            }
+            if(e.getSource() == zeroButton)
+            {
+                paymentString += 0;
+                text += 0;
+                paymentTextField.setText(text);
+            }
+            if(e.getSource() == periodButton)
+            {
+                paymentString += ".";
+                text += ".";
+                paymentTextField.setText(text);
+            }
+        }
+    }
+
+     /**
+      * This actionListener gets the subtotal by adding up all of the numbers from
+ the price panel and calculates the change based on how much money was given
+ to the cashier as placed in the paymentTextField.
+      */
+    private class okayButtonActionListener implements ActionListener
+    {
+        String str;
+        @Override
+        public void actionPerformed(ActionEvent e)
+        {
+            String changeString;
+            change = (Double.parseDouble(paymentString)) - subtotal;
+            changeString = String.format("%1$.2f", change);
+            changeTextField.setText("$" + changeString);
+        }
+    }
+
+    private class doneButtonActionListener implements ActionListener
+    {
+
+        @Override
+        public void actionPerformed(ActionEvent e)
+        {
+            dialog.dispose();
+            listScroller.setBackground(Color.pink);
+            priceScroller.setBackground(Color.pink);
+            list.setBackground(Color.pink);
+            priceList.setBackground(Color.pink);
+            printComponent(orderTotalPanel);
+            payButton.setEnabled(false);
+            price.clear();
+            order.clear();
+            insertSale();
+        }
+    }
+
+    /**
+     * Clears all Strings and fields in the payment dialog and resets the focus.
+     */
+    private class clearActionListener implements ActionListener
+     {
+        @Override
+        public void actionPerformed(ActionEvent e)
+        {
+            paymentString = "";
+            paymentTextField.setText("$");
+            changeTextField.setText("");
+            paymentTextField.requestFocus();
+        }
+     }
+
+    /**
+     * This method prints a receipt for the guest. Specifically it prints
+     * the order, the subtotal, tax, and total, which is stored in the orderTotalPanel,
+     * with a white background.
+     */
+    public void printComponent(final JPanel panel)
+    {
+
+        PrinterJob pj = PrinterJob.getPrinterJob();
+        pj.setJobName(" Print Component ");
+
+        pj.setPrintable (new Printable()
+        {
+            @Override
+            public int print(Graphics pg, PageFormat pf, int pageNum)
+            {
+                if (pageNum > 0)
+                {
+                    return Printable.NO_SUCH_PAGE;
+                }
+
+                Graphics2D g2 = (Graphics2D) pg;
+                g2.translate(pf.getImageableX(), pf.getImageableY());
+                panel.paint(g2);
+                return Printable.PAGE_EXISTS;
+            }
+        });
+
+        if (pj.printDialog() == false)
+            return;
+
+        try
+        {
+            pj.print();
+        }
+        catch (PrinterException ex)
+        {
+            JOptionPane.showMessageDialog(null, "Printing failed. ");
+        }
+    }
+
+	/**
+	 * This method prints a physical order for the kitchen with a white background.
+     */
+    public void printComponent(final JList list)
+    {
+
+        PrinterJob pj = PrinterJob.getPrinterJob();
+        pj.setJobName(" Print Component ");
+
+        pj.setPrintable (new Printable()
+        {
+            @Override
+            public int print(Graphics pg, PageFormat pf, int pageNum)
+            {
+                if (pageNum > 0)
+                {
+                    return Printable.NO_SUCH_PAGE;
+                }
+
+                Graphics2D g2 = (Graphics2D) pg;
+                g2.translate(pf.getImageableX(), pf.getImageableY());
+                list.paint(g2);
+                return Printable.PAGE_EXISTS;
+            }
+        });
+
+        if (pj.printDialog() == false)
+            return;
+
+        try
+        {
+            pj.print();
+        }
+        catch (PrinterException ex)
+        {
+            JOptionPane.showMessageDialog(null, "Printing failed. ");
+        }
+    }
+
+    private void insertSale()
+    {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
+        Date date = new Date();
+        sqlStatement = "INSERT INTO Sales " +
+                       "(PayDate, SalesPrice, Tax) " +
+                       "VALUES('" + dateFormat.format(date) + "', " +
+                       subtotal + ", " + tax + ")";
+        
+        EateryDBConnection.updateDatabase(sqlStatement);
+    }
+}

@@ -1,0 +1,99 @@
+package POS.GUI;
+
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.*;
+
+/**
+ * A POS System for a
+ * small restaurant.
+ * 
+ * Maeghan Colvin and Jennifer Haveman
+ * CSC 289 0B01
+ * February 22, 2014
+ */
+public class DessertsPanel extends JPanel
+{
+    // Variables.
+    private final JButton vanScoopButton, vanConeButton, chocoScoopButton, 
+            chocoConeButton, strawScoopButton, strawConeButton, bananaSplitButton;
+    private String foodPrice;
+    private String foodItem;
+    
+    /**
+     * Creates the desserts Panel.
+     */
+    public DessertsPanel()
+    {
+        // Set layout and border.
+        super();
+        setLayout(new GridLayout(7,1));
+        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        setFont(new Font("Arial",Font.BOLD,20));
+        
+        // Create buttons.
+        vanScoopButton = new JButton("Vanilla Scoop");
+        vanConeButton = new JButton("Vanilla Cone");
+        chocoScoopButton = new JButton("Chocolate Scoop");
+        chocoConeButton = new JButton("Chocolate Cone");
+        strawScoopButton = new JButton("Strawberry Scoop");
+        strawConeButton = new JButton("Strawberry Cone");
+        bananaSplitButton = new JButton("Banana Split");
+        
+        // adds actionListeners
+        vanScoopButton.addActionListener(new dessertListener());
+        vanConeButton.addActionListener(new dessertListener());
+        chocoScoopButton.addActionListener(new dessertListener());
+        chocoConeButton.addActionListener(new dessertListener());
+        strawScoopButton.addActionListener(new dessertListener());
+        strawConeButton.addActionListener(new dessertListener());
+        bananaSplitButton.addActionListener(new dessertListener());
+        
+        // Add buttons.
+        add(vanScoopButton);
+        add(vanConeButton);
+        add(chocoScoopButton);
+        add(chocoConeButton);
+        add(strawScoopButton);
+        add(strawConeButton);
+        add(bananaSplitButton);
+    }
+
+    /**
+     * An action listener that checks to see which button is selected
+     * sets the price and sends them to the appropriate lists for display.
+     */
+    class dessertListener implements ActionListener
+    {
+        @Override
+        public void actionPerformed(ActionEvent e) 
+        {
+            MenuPane.sendOrderButton.setEnabled(true);
+            
+            JButton button = (JButton) e.getSource();            
+            foodItem = button.getText();
+            MenuPane.getOrders(foodItem);
+
+            if(e.getSource() == vanScoopButton | e.getSource() == chocoScoopButton | 
+                    e.getSource() == strawScoopButton)
+            {
+                foodPrice = "1.99";
+                MenuPane.getPrice(foodPrice);
+            }
+            else if(e.getSource() == vanConeButton | e.getSource() == chocoConeButton | 
+                    e.getSource() == strawConeButton)
+            {
+                foodPrice = "2.49";
+                MenuPane.getPrice(foodPrice);
+            }
+            else
+            {
+                foodPrice = "5.99";
+                MenuPane.getPrice(foodPrice);
+            }
+        }
+    }
+    
+}

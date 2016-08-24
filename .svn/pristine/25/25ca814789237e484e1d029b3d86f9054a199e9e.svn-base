@@ -1,0 +1,177 @@
+package POS.GUI;
+
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.*;
+
+/**
+ * A POS System for a
+ * small restaurant.
+ * 
+ * Maeghan Colvin and Jennifer Haveman
+ * CSC 289 0B01
+ * February 22, 2014
+ */
+
+public class BevPanel extends JPanel
+{
+    // Variables.
+    private final JButton waterButton, smallBevButton, medBevButton, lrgBevButton,
+            vanMilkshakeButton, chocoMilkshakeButton, strawMilkshakeButton;
+    private String foodPrice;
+    private final JDialog dialog = new JDialog(MenuPane.frame, true);
+    private String foodItem;
+    
+    /**
+     * Creates a beverage panel with all the
+     * beverage sizes and types available for purchase.
+     */
+    public BevPanel()
+    {
+        // Set the layout and border.
+        super();
+        setLayout(new GridLayout(7,1));
+        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        this.setFont(new Font("Arial",Font.BOLD,20));
+        
+        // Create buttons
+        waterButton = new JButton("Bottled Water");
+        smallBevButton = new JButton("Small Beverage");
+        medBevButton = new JButton("Medium Beverage");
+        lrgBevButton = new JButton("Large Beverage");
+        vanMilkshakeButton = new JButton("Vanilla Milkshake");
+        chocoMilkshakeButton = new JButton("Chocolate Milkshake");
+        strawMilkshakeButton = new JButton("Strawberry Milkshake");
+        
+        // Add buttons
+        add(waterButton);
+        add(smallBevButton);
+        add(medBevButton);
+        add(lrgBevButton);
+        add(vanMilkshakeButton);
+        add(chocoMilkshakeButton);
+        add(strawMilkshakeButton);
+        
+        // adds local actionListener
+        waterButton.addActionListener(new ModListener());
+        vanMilkshakeButton.addActionListener(new ModListener());
+        chocoMilkshakeButton.addActionListener(new ModListener());
+        strawMilkshakeButton.addActionListener(new ModListener());
+        smallBevButton.addActionListener(new ModListener());
+        medBevButton.addActionListener(new ModListener());
+        lrgBevButton.addActionListener(new ModListener());
+    }
+    private void createModDialog()
+    {
+         // creates and instantiates all dialog components
+         JButton drPepperButton, cokeButton, dietCokeButton, lemonadeButton,
+                 mtDewButton, rootBeerButton, spriteButton;
+
+         drPepperButton = new JButton("Dr. Pepper");
+         cokeButton = new JButton("Coke");
+         dietCokeButton = new JButton("Diet Coke");
+         lemonadeButton = new JButton("Lemonade");
+         mtDewButton = new JButton("Mello Yello");
+         rootBeerButton = new JButton("Barq Root Beer");
+         spriteButton = new JButton("Sprite");
+
+         
+         JPanel sodaModPanel = new JPanel();
+         sodaModPanel.setLayout(new GridLayout(4,2));
+         sodaModPanel.add(Box.createHorizontalGlue());
+         sodaModPanel.add(cokeButton);                 
+         sodaModPanel.add(dietCokeButton);
+         sodaModPanel.add(drPepperButton);
+         sodaModPanel.add(lemonadeButton);
+         sodaModPanel.add(mtDewButton);
+         sodaModPanel.add(rootBeerButton);
+         sodaModPanel.add(spriteButton);
+         sodaModPanel.setBorder(BorderFactory.createTitledBorder("Beverages"));
+         
+         // adds actionListeners to dialog buttons
+         cokeButton.addActionListener(new exitListener());
+         dietCokeButton.addActionListener(new exitListener());
+         drPepperButton.addActionListener(new exitListener());
+         lemonadeButton.addActionListener(new exitListener());
+         mtDewButton.addActionListener(new exitListener());
+         rootBeerButton.addActionListener(new exitListener());
+         spriteButton.addActionListener(new exitListener());
+         
+         sodaModPanel.setOpaque(true);
+         dialog.setContentPane(sodaModPanel);
+         
+         //Show it.
+         dialog.setSize(new Dimension(300, 300));
+         dialog.setLocationRelativeTo(MenuPane.frame);
+         dialog.setVisible(true);
+    }
+    
+    /**
+     * ActionListener added to the Dialog buttons ONLY. This listener gets the 
+     * source of the action call, gets the button name, and appends it to the 
+     * name of the button that called the dialog.
+    */
+    class exitListener implements ActionListener 
+    {
+
+        @Override
+        public void actionPerformed(ActionEvent e) 
+        {
+            JButton button = (JButton) e.getSource();
+            String str = button.getText();
+            foodItem += " -- " + str;
+            MenuPane.getOrders(foodItem);
+            dialog.setVisible(false);
+            dialog.dispose();
+        }
+        
+    }
+    /**
+     * This actionListener is attached to the panel buttons. Gets the source
+     * of the action call, and sets a price and sends it and the name to the
+     * main list for display. Also, opens dialog if necessary.
+     */
+    class ModListener implements ActionListener
+    {
+        @Override
+        public void actionPerformed(ActionEvent e) 
+        {
+            JButton button = (JButton) e.getSource();            
+            foodItem = button.getText();
+
+            if(e.getSource() == smallBevButton)
+            {
+                createModDialog();
+                foodPrice = "0.99";
+                MenuPane.getPrice(foodPrice);
+            }
+            else if(e.getSource() == medBevButton)
+            {
+                createModDialog();
+                foodPrice = "1.99";
+                MenuPane.getPrice(foodPrice);
+            }
+            else if(e.getSource() == lrgBevButton)
+            {
+                createModDialog();
+                foodPrice = "2.99";
+                MenuPane.getPrice(foodPrice);
+            }
+            else if(e.getSource() == waterButton)
+            {
+                foodPrice = "1.99";
+                MenuPane.getPrice(foodPrice);
+                MenuPane.getOrders(foodItem);
+            }
+            else
+            {
+                foodPrice = "3.99";
+                MenuPane.getPrice(foodPrice);
+                MenuPane.getOrders(foodItem);
+            }
+        }
+    }
+}

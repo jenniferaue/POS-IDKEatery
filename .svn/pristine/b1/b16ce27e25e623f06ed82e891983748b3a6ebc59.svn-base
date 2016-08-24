@@ -1,0 +1,541 @@
+package POS.GUI;
+
+import POS.data.EateryDBConnection;
+import java.awt.*;
+import java.awt.event.*;
+import java.text.*;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import javax.swing.*;
+import static javax.swing.BoxLayout.PAGE_AXIS;
+import javax.swing.border.TitledBorder;
+
+/**
+ * A POS System for a
+ * small restaurant.
+ * 
+ * Maeghan Colvin and Jennifer Haveman
+ * CSC 289 0B01
+ * February 22, 2014
+ */
+
+public class ClockInOutPanel extends JPanel
+{
+    // Variables
+    private final JFrame frame;
+    private JPanel mainPanel;               // Holds the mainPanel
+    private JPanel clockInOutPanel;         // Holds the Clock in pad
+    private JPanel optionsPanel;            // Holds clock in, out, and etc options
+    private JToggleButton clockInButton, clockOutButton, posButton;
+    private ButtonGroup optionsGroup;       // Holds the toggle buttons
+    private String sqlStatement;            // Determines proper sqlStatement
+    private String sqlStatement2;           // Determines if employee is already clocked in
+    private String sqlStatement3;           // Clock employee in or out
+    private String employeeNumberString = "";// Employee Number
+    private long hoursWorked;
+    private String hourMinuteSecond;
+    
+    // Variables for clock in and out panel
+    private JPanel numberPanel;                             // Holds keypad Panel
+    private JTextField employeeNumberTextField;             // employee ID label
+    private final JButton numbersButton[] = new JButton[9]; // Number buttons 1-8
+    private JButton okayButton, zeroButton, clearButton;    // Ok, 0, clear buttons
+    private boolean found = false;                          // Finds employeeID in database
+    private boolean found2 = false;                         // Finds if employee is currently clocked in.
+    private boolean found3 = false;                         // Determines if employee can access the menu
+    
+    /**
+     * Constructor
+     */
+    public ClockInOutPanel()
+    {
+        // Set Look and Feel.
+        try {
+            UIManager.setLookAndFeel(
+                UIManager.getSystemLookAndFeelClassName());
+        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | UnsupportedLookAndFeelException e) { }
+ 
+        // Set Looks and Feel.
+        JFrame.setDefaultLookAndFeelDecorated(true);
+        
+        // Gets the size of the window so it's maximized.
+        Toolkit tk = Toolkit.getDefaultToolkit();  
+        int xSize = ((int) tk.getScreenSize().getWidth());  
+        int ySize = ((int) tk.getScreenSize().getHeight()); 
+        
+        // Divides the space NOT taken by the panel into two to get the necessary
+        // filler size.
+        int fillerWidth = (xSize - 500)/2;
+        int fillerHeight = (ySize - 475)/2;
+        
+        // Sets the filler size.
+        Dimension minSize = new Dimension(fillerWidth, fillerHeight);        
+        Dimension prefSize = new Dimension(fillerWidth, fillerHeight);        
+        Dimension maxSize = new Dimension(Short.MAX_VALUE, fillerHeight);
+
+        // Create and set up the window.
+        frame = new JFrame("I Don't Know Eatery");
+        frame.getContentPane().setBackground(Color.DARK_GRAY);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setUndecorated(true);
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        frame.setLayout(new BoxLayout(frame.getContentPane(), PAGE_AXIS));
+        frame.add(new Box.Filler(minSize, prefSize, maxSize));
+        buildMainPanel();
+        frame.add(mainPanel);
+        frame.add(new Box.Filler(minSize, prefSize, maxSize));
+        
+        // Add content to the window.
+        frame.validate();
+        
+        // Display the window.
+        frame.setVisible(true);   
+    }
+    
+    /**
+     * This method simply creates the panel.
+     * @return      <code>JPanel</code> Returns the clockInOutPanel
+     */
+    private JPanel ClockInOutPanel() 
+    {
+        // Set layout and border for mainPanel
+        clockInOutPanel = new JPanel(new BorderLayout());
+        clockInOutPanel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
+        
+        // Create TextField
+        employeeNumberTextField = new JTextField(3);
+        employeeNumberTextField.setToolTipText("Enter employee number.");
+        employeeNumberTextField.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        
+        // Initializes a simple keypress event that doesn't allow for anything except
+        // numbers.
+        employeeNumberTextField.addKeyListener(new KeyAdapter() 
+        {
+            @Override
+            public void keyTyped(KeyEvent e) 
+            {
+                char character = e.getKeyChar();
+                if (((character < '0') || (character > '9'))
+                        && (character != '\b')) 
+                {
+                    e.consume();
+                }
+            }
+        });
+        employeeNumberTextField.setDocument(new JTextFieldLimit(3));
+        // Set layout and border for numberPanel
+        numberPanel = new JPanel(new GridLayout(4, 2));
+        numberPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        
+        // Add buttons to numberPanel
+        for(int index = 0; index < numbersButton.length; index++)
+        {
+            numbersButton[index] = new JButton();
+            numbersButton[index].setText(Integer.toString(index + 1));
+            numbersButton[index].addActionListener(new employeeNumberActionListener());
+            numberPanel.add(numbersButton[index]);
+        }
+        
+        // Add the ok, zero, and clear buttons to the numbersPanel
+        okayButton = new JButton("OK");
+        okayButton.setMnemonic(KeyEvent.VK_K);
+        okayButton.addActionListener(new okayButtonActionListener());
+        zeroButton = new JButton("0");
+        zeroButton.addActionListener(new employeeNumberActionListener());
+        clearButton = new JButton("Clear");
+        clearButton.setMnemonic(KeyEvent.VK_C);
+        clearButton.addActionListener(new clearActionListener());
+        numberPanel.add(okayButton);
+        numberPanel.add(zeroButton);
+        numberPanel.add(clearButton);
+        
+        // Add components to mainPanel
+        clockInOutPanel.add(employeeNumberTextField, BorderLayout.NORTH);
+        clockInOutPanel.add(numberPanel, BorderLayout.CENTER);
+        
+        return clockInOutPanel;
+    }
+    
+    /**
+     * The buildMainPanel builds the 
+     * mainPanel.
+     */
+    private void buildMainPanel() 
+    {
+        // Create mainPanel
+        this.mainPanel = new JPanel(new BorderLayout());
+        this.mainPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        
+        // Set layout and border for optionsPanel
+        optionsPanel = new JPanel(new GridLayout(0,3));
+        optionsPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        
+        // Create ButtonGroup and options buttons
+        optionsGroup = new ButtonGroup();
+        clockInButton = new JToggleButton("Clock In", false);
+        clockInButton.setMnemonic(KeyEvent.VK_I);
+        clockInButton.addActionListener(new optionsActionListener());
+        clockInButton.setMinimumSize(new Dimension(100, 75));
+        clockInButton.setPreferredSize(new Dimension(100, 75));
+        clockInButton.setMaximumSize(new Dimension(100, 75));
+        
+        clockOutButton = new JToggleButton("Clock Out", false);
+        clockOutButton.setMnemonic(KeyEvent.VK_O);
+        clockOutButton.addActionListener(new optionsActionListener());
+        clockOutButton.setMinimumSize(new Dimension(100, 75));
+        clockOutButton.setPreferredSize(new Dimension(100, 75));
+        clockOutButton.setMaximumSize(new Dimension(100, 75));
+        
+        posButton = new JToggleButton("Menu", false);
+        posButton.setMnemonic(KeyEvent.VK_M);
+        posButton.addActionListener(new optionsActionListener());
+        posButton.setMinimumSize(new Dimension(100, 75));
+        posButton.setPreferredSize(new Dimension(100, 75));
+        posButton.setMaximumSize(new Dimension(100, 75));
+        
+        // Add option buttons to optionsGroup
+        optionsGroup.add(clockInButton);
+        optionsGroup.add(clockOutButton);
+        optionsGroup.add(posButton);
+        
+        // Add option buttons to optionsPanel
+        optionsPanel.add(clockInButton);
+        optionsPanel.add(clockOutButton);
+        optionsPanel.add(posButton);
+        
+        // Set clock in button selection
+        clockInButton.setSelected(true);
+        
+        // Add the Clock in/out screen.
+        clockInOutPanel = ClockInOutPanel();
+        mainPanel.add(clockInOutPanel, BorderLayout.CENTER);
+        mainPanel.add(optionsPanel, BorderLayout.SOUTH);
+        
+        TitledBorder title;
+        title = BorderFactory.createTitledBorder("I Don't Know Eatery");
+        mainPanel.setBorder(title);
+        mainPanel.setMinimumSize(new Dimension(500, 475));
+        mainPanel.setPreferredSize(new Dimension(500, 475));
+        mainPanel.setMaximumSize(new Dimension(500, 475));
+    }
+    
+    /**
+     * The databaseSearch determines the selected toggle button, gets
+     * information from the database and does one of three things; sets a clock
+     * in time, sets a clock out time, or opens the menu. On selection it makes
+     * sure the person is either clocked in/out or has the correct job code
+     * to access the menu.
+     * @param empNumber         A string that contains the employee ID number
+     *                          entered within the mainPanel.
+     * @return                  <code>String</code> Returns employee ID number
+     */
+    public String databaseSearch(String empNumber)
+    {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date date = new Date();
+
+        if (clockInButton.isSelected())
+        {
+             sqlStatement = "SELECT EmployeeID " + 
+                            "FROM Employee " +
+                            "WHERE employeeID = " + empNumber;
+             sqlStatement2 = "Select EmployeeID " +
+                            "FROM ClockInOut " +
+                            "WHERE employeeID = " + empNumber + " " +
+                            "AND ClockIn < " + "'" + dateFormat.format(date) + "'" +
+                            " " + "AND ClockOut IS NULL";
+             sqlStatement3 = "INSERT INTO ClockInOut VALUES (" +
+                              empNumber + ", " + 
+                              "'" + dateFormat.format(date) + "', " +
+                              "NULL, NULL)";
+        }
+        else if (clockOutButton.isSelected())
+        {
+            sqlStatement = "SELECT EmployeeID " + 
+                            "FROM Employee " +
+                            "WHERE EmployeeID = " + empNumber;
+            sqlStatement2 = "Select EmployeeID " +
+                            "FROM ClockInOut " +
+                            "WHERE EmployeeID = " + empNumber + " " +
+                            "AND ClockIn < " + "'" + dateFormat.format(date) + "'" +
+                            " " + "AND ClockOut IS NULL";
+            sqlStatement3 = "UPDATE ClockInOut " +
+                            "SET ClockOut = " + "'" + dateFormat.format(date) + "'" +
+                            "WHERE EmployeeID = " + empNumber +
+                            "AND ClockOut IS NULL";
+        }
+        else if (posButton.isSelected())
+        {
+            sqlStatement = "SELECT EmployeeID " + 
+                            "FROM Employee " +
+                            "WHERE EmployeeID = " + empNumber;
+            sqlStatement2 = "Select EmployeeID " +
+                            "FROM ClockInOut " +
+                            "WHERE EmployeeID = " + empNumber + " " +
+                            "AND ClockIn < " + "'" + dateFormat.format(date) + "'" +
+                            " " + "AND ClockOut IS NULL";
+            sqlStatement3 = "SELECT EmployeeID " +
+                            "FROM Employee " +
+                            "WHERE employeeID = " + empNumber + " " +
+                            "AND JobCode IN ('M', 'C', 'G')";
+        }
+        return sqlStatement;
+    }
+    /**
+     * 
+     * @return sqlStatement2
+     */
+    public String databaseStatement()
+    {
+        return sqlStatement2;
+    }
+    
+    public void getHoursWorked()
+    {
+        // Variables
+        String timeIn, timeOut;
+        String sqlStatement4;           // Retrieves clock in time
+        String sqlStatement5;           // Retrieves clock out time
+        String sqlStatement6;           // Updates the TotalTime column
+        
+        // Create date format
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        
+        // SQL statements to retrieve clockin/out time
+        sqlStatement4 = "Select ClockIn " +
+                        "FROM ClockInOut " +
+                        "WHERE EmployeeId = " +
+                        employeeNumberString + 
+                        "AND ClockOut IS NOT NULL " +
+                        "AND TotalTime IS NULL ";
+        
+        sqlStatement5 = "Select ClockOut " +
+                        "FROM ClockInOut " +
+                        "WHERE EmployeeId = " +
+                        employeeNumberString + 
+                        "AND ClockOut IS NOT NULL " +
+                        "AND TotalTime IS NULL ";
+        
+        // Get the clockin/out dates
+        timeIn = EateryDBConnection.getDataString(sqlStatement4);
+        timeOut = EateryDBConnection.getDataString(sqlStatement5);
+        
+        // Convert the string dates to dateformat.
+        try
+        {
+            // Parse the strings into the date format and substract
+            Date date1 = dateFormat.parse(timeIn);  
+            Date date2 = dateFormat.parse(timeOut);
+            hoursWorked = Math.abs(date1.getTime() - date2.getTime());
+            
+            // Convert milliseconds to HH:mm:ss and update database
+            hourMinuteSecond = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(hoursWorked),
+            TimeUnit.MILLISECONDS.toMinutes(hoursWorked) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(hoursWorked)),
+            TimeUnit.MILLISECONDS.toSeconds(hoursWorked) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(hoursWorked)));
+            sqlStatement6 = "UPDATE ClockInOut " +
+                        "SET TotalTime = " + "'" + hourMinuteSecond + "' " +
+                        "WHERE EmployeeId = " + employeeNumberString +
+                        "AND ClockOut IS NOT NULL " +
+                        "AND TotalTime IS NULL ";
+            System.out.println(hourMinuteSecond);
+            EateryDBConnection.updateDatabase(sqlStatement6);
+        }
+        catch (ParseException e) 
+        {
+	}
+    }
+    
+    /**
+     * The optionsActionListener receives
+     * the proper sqlStatement for the option buttons.
+     */
+    
+    private class optionsActionListener implements ActionListener 
+    {
+        @Override
+        public void actionPerformed(ActionEvent e) 
+        { 
+            // Determine which option button is selected
+            sqlStatement = databaseSearch(employeeNumberString); 
+        }
+    }
+    /**
+      * The employeeNumberActionListener displays the numbers
+      * from the number pad and displays them in the JTextField.
+      */
+    
+     private class employeeNumberActionListener implements ActionListener 
+     {
+        @Override
+        public void actionPerformed(ActionEvent e) 
+        {
+            String text = employeeNumberTextField.getText();
+            
+            if(e.getSource() == numbersButton[0])  
+            {    
+                employeeNumberString += 1;
+                text += "*";
+                employeeNumberTextField.setText(text);
+            } 
+            if(e.getSource() == numbersButton[1])  
+            {
+                employeeNumberString += 2;
+                text += "*";
+                employeeNumberTextField.setText(text); 
+            }
+            if(e.getSource() == numbersButton[2])  
+            {
+                employeeNumberString += 3;
+                text += "*";
+                employeeNumberTextField.setText(text); 
+            } 
+            if(e.getSource() == numbersButton[3])  
+            {
+                employeeNumberString += 4;
+                text += "*";
+                employeeNumberTextField.setText(text); 
+            }
+            if(e.getSource() == numbersButton[4])  
+            {
+                employeeNumberString += 5;
+                text += "*";
+                employeeNumberTextField.setText(text);  
+            }
+            if(e.getSource() == numbersButton[5])  
+            {
+                employeeNumberString += 6;
+                text += "*";
+                employeeNumberTextField.setText(text);  
+            }
+            if(e.getSource() == numbersButton[6])  
+            {
+                employeeNumberString += 7;
+                text += "*";
+                employeeNumberTextField.setText(text);  
+            }
+            if(e.getSource() == numbersButton[7])  
+            {
+                employeeNumberString += 8;
+                text += "*";
+                employeeNumberTextField.setText(text);  
+            }
+            if(e.getSource() == numbersButton[8])  
+            {
+                employeeNumberString += 9;
+                text += "*";
+                employeeNumberTextField.setText(text);  
+            }
+            if(e.getSource() == zeroButton)  
+            {
+                employeeNumberString += 0;
+                text += "*";
+                employeeNumberTextField.setText(text);  
+            }
+        }
+     }
+     
+     /**
+      * The okayButtonActionListener determines the option
+      * selected and if the employee number is valid.
+      */
+     
+     private class okayButtonActionListener implements ActionListener 
+     {
+        @Override
+        public void actionPerformed(ActionEvent e) 
+        {   
+            if(!employeeNumberTextField.getText().trim().isEmpty())
+            {
+                if(employeeNumberString.isEmpty())
+                {
+                    employeeNumberString = employeeNumberTextField.getText();
+                }
+                // Determine which option button is selected
+                sqlStatement = databaseSearch(employeeNumberString);
+
+                // Search the database for employee and clock in.
+                found = EateryDBConnection.getSearch(sqlStatement);
+                found2 = EateryDBConnection.getSearch(sqlStatement2);
+
+                // Determines if the employee number is valid. 
+                if (found == true)
+                {
+                    // Determines if the employee is 
+                    // clocked into the system.
+                    if (found2 == true)
+                    {   
+                        // Clock employee out.
+                        if (clockOutButton.isSelected() == true)
+                        {
+                            // Send clock out to database.
+                            EateryDBConnection.updateDatabase(sqlStatement3);
+                            JOptionPane.showMessageDialog(null, "You are now clocked out");
+                            getHoursWorked();
+                        }
+                        // Open the menu screen to employees
+                        // that have access to it.
+                        else if (posButton.isSelected() == true)
+                        {
+                            found3 = EateryDBConnection.getSearch(sqlStatement3);
+                                if (found3 == true) 
+                                {
+                                    // Open the menu screen if
+                                    // the employee has access.
+                                    frame.setVisible(false);
+                                    MenuPane menuScreen = new MenuPane();
+                                }
+                                else
+                                {
+                                    JOptionPane.showMessageDialog(null, "Access Denied");
+                                }
+                         }
+                        else
+                        {
+                            JOptionPane.showMessageDialog(null, "You are already clocked in");
+                        }
+
+                    }
+                    else
+                    {
+                        // Clock employee in.
+                        if (clockInButton.isSelected() == true)
+                        {
+                            // Send clock in to database
+                            EateryDBConnection.updateDatabase(sqlStatement3);
+                            JOptionPane.showMessageDialog(null, "You are now clocked in");
+                        }
+                        else
+                        {
+                            JOptionPane.showMessageDialog(null, "You are not clocked in.");
+                        }
+                    }
+                }
+                else
+                {
+                    JOptionPane.showMessageDialog(null, "Invalid Number");
+                }
+
+                // Clears the PasswordField and resets the focus.
+                employeeNumberString = "";
+                employeeNumberTextField.setText("");
+                employeeNumberTextField.requestFocus();
+            }
+        }
+     }
+     
+     /**
+      * The clearActionListener clears the textField
+      */
+     
+     private class clearActionListener implements ActionListener 
+     {
+        @Override
+        public void actionPerformed(ActionEvent e) 
+        { 
+            // Clears the TextField and resets the focus.
+            employeeNumberString = "";
+            employeeNumberTextField.setText("");
+            employeeNumberTextField.requestFocus();
+        }
+     }
+}
